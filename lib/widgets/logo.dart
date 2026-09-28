@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
@@ -10,30 +11,29 @@ enum LogoSize { compact, normal, large }
 /// Matches the web prototype's `Logo`: a ring mark + wordmark, with "SMART"
 /// in the brand blue and "REP" in foreground. Large size adds a tagline.
 class Logo extends StatelessWidget {
-  const Logo({super.key, this.size = LogoSize.normal});
+  const Logo({super.key, this.size = LogoSize.normal, this.muted = false});
   final LogoSize size;
+  final bool muted;
 
   @override
   Widget build(BuildContext context) {
     final markSize = switch (size) { LogoSize.compact => 36.0, LogoSize.large => 88.0, LogoSize.normal => 60.0 };
     final textSize = switch (size) { LogoSize.compact => 18.0, LogoSize.large => 40.0, LogoSize.normal => 26.0 };
 
-    final mark = Container(
+    final mark = SvgPicture.asset(
+      'assets/images/smartrep-mark-gray.svg',
       width: markSize,
       height: markSize,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.brandBlue, width: math.max(2, markSize * 0.07)),
-      ),
-      child: Icon(Icons.bolt_rounded, color: AppColors.brandBlue, size: markSize * 0.5),
     );
 
     final wordmark = RichText(
       text: TextSpan(
         style: AppText.display(size: textSize, weight: FontWeight.w700),
         children: [
-          TextSpan(text: 'SMART', style: TextStyle(color: AppColors.brandBlue)),
+          TextSpan(
+            text: 'SMART',
+            style: TextStyle(color: muted ? const Color(0xFF525252) : AppColors.brandBlue),
+          ),
           const TextSpan(text: 'REP', style: TextStyle(color: AppColors.foreground)),
         ],
       ),
