@@ -60,26 +60,39 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(2),
                   child: SizedBox(
-                    height: 3,
+                    height: 4,
                     child: Stack(
                       children: [
                         Container(color: AppColors.secondary),
-                        FractionallySizedBox(widthFactor: (_rep / 5).clamp(0, 1), child: Container(color: AppColors.foreground)),
+                        // transition-all duration-500
+                        AnimatedFractionallySizedBox(
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeInOutCubic,
+                          alignment: Alignment.centerLeft,
+                          widthFactor: (_rep / 5).clamp(0.0, 1.0),
+                          child: Container(color: AppColors.foreground),
+                        ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
                 Container(
-                  height: 260,
-                  decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(12)),
+                  height: 350,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    color: AppColors.card.withValues(alpha: 0.35),
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: Stack(
                     children: [
-                      const Positioned(left: 16, top: 16, bottom: 16, child: MachineArtwork(width: 160)),
+                      const Positioned(left: 20, top: 28, child: MachineArtwork(height: 224, width: 240, alignment: Alignment.centerLeft)),
+                      Positioned(right: 16, top: 32, child: _romTrack()),
                       if (!_complete)
                         Positioned(
-                          left: 16,
-                          bottom: 14,
+                          left: 20,
+                          bottom: 20,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -91,7 +104,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                       if (_complete)
                         Positioned.fill(
                           child: Container(
-                            color: AppColors.background.withValues(alpha: 0.88),
+                            color: AppColors.background.withValues(alpha: 0.85),
                             alignment: Alignment.center,
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -140,6 +153,60 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// Right-hand range track: fill height animates like `transition-all duration-500`.
+  Widget _romTrack() {
+    final fill = (20 + (_rep % 5) * 17) / 100;
+    return SizedBox(
+      height: 256,
+      child: Row(
+        children: [
+          SizedBox(
+            width: 12,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(decoration: BoxDecoration(color: AppColors.secondary, borderRadius: BorderRadius.circular(6))),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: AnimatedFractionallySizedBox(
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOutCubic,
+                    heightFactor: fill,
+                    widthFactor: 1,
+                    alignment: Alignment.bottomCenter,
+                    child: Container(decoration: BoxDecoration(color: AppColors.foreground, borderRadius: BorderRadius.circular(6))),
+                  ),
+                ),
+                Positioned(
+                  left: -4,
+                  bottom: 256 * 0.72,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.foreground,
+                      border: Border.all(color: AppColors.background, width: 4),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('MAX', style: eyebrowStyle(size: 9).copyWith(fontWeight: FontWeight.w400)),
+              Text('MIN', style: eyebrowStyle(size: 9).copyWith(fontWeight: FontWeight.w400)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

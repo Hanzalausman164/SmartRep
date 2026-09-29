@@ -37,7 +37,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   ),
                   child: Row(
                     children: [
-                      const MachineArtwork(height: 96, width: 110),
+                      const MachineArtwork(height: 112, width: 128),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(

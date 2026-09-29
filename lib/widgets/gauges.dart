@@ -34,10 +34,11 @@ class RomBar extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(14),
                       child: Column(
+                        // top -> bottom, matching the web version's band order.
                         children: const [
-                          Expanded(child: ColoredBox(color: AppColors.qualityPoor)),
-                          Expanded(child: ColoredBox(color: AppColors.qualityWarn)),
                           Expanded(child: ColoredBox(color: AppColors.qualityGood)),
+                          Expanded(child: ColoredBox(color: AppColors.qualityWarn)),
+                          Expanded(child: ColoredBox(color: Color(0xFFF97316))), // web hardcodes #f97316 here
                           Expanded(child: ColoredBox(color: AppColors.qualityPoor)),
                         ],
                       ),
@@ -45,7 +46,8 @@ class RomBar extends StatelessWidget {
                   ),
                 ),
                 AnimatedAlign(
-                  duration: const Duration(milliseconds: 500),
+                  duration: const Duration(milliseconds: 700), // transition-all duration-700
+                  curve: Curves.easeInOutCubic,
                   alignment: Alignment(0, 1 - (value.clamp(0, 100) / 100) * 2),
                   child: Container(
                     width: 28,
@@ -106,12 +108,32 @@ class SpeedGauge extends StatelessWidget {
     final angle = -70 + (speed / 1.8).clamp(0, 1) * 140;
     return Column(
       children: [
-        SizedBox(
-          height: 100,
-          child: CustomPaint(
-            painter: _GaugePainter(angleDegrees: angle.toDouble()),
-            child: const SizedBox(width: 176, height: 100),
-          ),
+        // The gauge is authored in a 180x110 viewBox (matches the web SVG).
+        // Sizing it from the *available* width instead of a fixed 176px, and
+        // clipping the paint, stops the round stroke caps at the two red
+        // ends from bleeding past the column on narrower phone widths.
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final maxWidth = constraints.maxWidth.isFinite ? constraints.maxWidth : 176.0;
+            final width = math.min(maxWidth, 176.0); // web: `max-w-44` (11rem)
+            final height = width * 110 / 180;
+            return ClipRect(
+              child: SizedBox(
+                width: width,
+                height: height,
+                // needle: `transition-transform duration-700`
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(end: angle.toDouble()),
+                  duration: const Duration(milliseconds: 700),
+                  curve: Curves.easeInOutCubic,
+                  builder: (context, a, _) => CustomPaint(
+                    painter: _GaugePainter(angleDegrees: a),
+                    size: Size(width, height),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
         Transform.translate(
           offset: const Offset(0, -16),
@@ -140,27 +162,46 @@ class _GaugePainter extends CustomPainter {
   _GaugePainter({required this.angleDegrees});
   final double angleDegrees;
 
+  // Matches the web `SpeedGauge`: a 180deg semicircular track (radius 65,
+  // centred at 90,90) split into 5 equal 36deg bands running
+  // poor -> warn -> good -> warn -> poor, each drawn at 85% opacity with
+  // round caps only on the two outer ends.
+  static const _segmentColors = [
+    AppColors.qualityPoor,
+    AppColors.qualityWarn,
+    AppColors.qualityGood,
+    AppColors.qualityWarn,
+    AppColors.qualityPoor,
+  ];
+
   @override
   void paint(Canvas canvas, Size size) {
     final scale = size.width / 180;
     canvas.save();
     canvas.scale(scale);
 
+    const center = Offset(90, 90);
+    const radius = 65.0;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    // Background track underneath the colored bands.
     final track = Paint()
       ..color = AppColors.secondary
       ..style = PaintingStyle.stroke
       ..strokeWidth = 15
       ..strokeCap = StrokeCap.round;
-    final trackPath = Path()..moveTo(25, 90)..arcToPoint(const Offset(155, 90), radius: const Radius.circular(65));
-    canvas.drawPath(trackPath, track);
+    canvas.drawArc(rect, math.pi, math.pi, false, track);
 
-    final good = Paint()
-      ..color = AppColors.qualityGood
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 15
-      ..strokeCap = StrokeCap.butt;
-    final goodPath = Path()..moveTo(39, 52)..arcToPoint(const Offset(141, 52), radius: const Radius.circular(65));
-    canvas.drawPath(goodPath, good);
+    const segmentSweep = math.pi / 5; // 36deg
+    for (var i = 0; i < _segmentColors.length; i++) {
+      final isOuter = i == 0 || i == _segmentColors.length - 1;
+      final paint = Paint()
+        ..color = _segmentColors[i].withValues(alpha: 0.85)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 15
+        ..strokeCap = isOuter ? StrokeCap.round : StrokeCap.butt;
+      canvas.drawArc(rect, math.pi + i * segmentSweep, segmentSweep, false, paint);
+    }
 
     canvas.translate(90, 90);
     canvas.rotate(angleDegrees * math.pi / 180);

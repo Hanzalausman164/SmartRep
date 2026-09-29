@@ -46,19 +46,27 @@ class _ConnectingScreenState extends State<ConnectingScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 8),
-                Container(
-                  width: 96,
-                  height: 96,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _connected ? AppColors.qualityGood.withValues(alpha: 0.1) : AppColors.card,
-                    border: Border.all(color: _connected ? AppColors.qualityGood : AppColors.border),
-                  ),
-                  child: Icon(
-                    _connected ? Icons.check : Icons.bluetooth,
-                    size: 36,
-                    color: _connected ? AppColors.qualityGood : AppColors.foreground,
+                SizedBox(
+                  width: 224, // room for the ping ring to grow (scale 2x of 112px)
+                  height: 130,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (!_connected) const _PingRing(),
+                      Container(
+                        width: 96,
+                        height: 96,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _connected ? AppColors.qualityGood.withValues(alpha: 0.1) : AppColors.card,
+                          border: Border.all(color: _connected ? AppColors.qualityGood : AppColors.border),
+                        ),
+                        child: _connected
+                            ? const Icon(Icons.check, size: 40, color: AppColors.qualityGood)
+                            : const _PulsingIcon(Icons.bluetooth),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -69,7 +77,7 @@ class _ConnectingScreenState extends State<ConnectingScreen> {
                 const SizedBox(height: 6),
                 Text(_connected ? 'Lat Pulldown' : 'Hold steady', style: AppText.display(size: 26, weight: FontWeight.w700)),
                 const SizedBox(height: 16),
-                const MachineArtwork(height: 200),
+                const MachineArtwork(height: 224),
                 const SizedBox(height: 16),
                 const Divider(color: AppColors.border, height: 1),
                 Padding(
@@ -102,6 +110,81 @@ class _ConnectingScreenState extends State<ConnectingScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Tailwind `animate-ping`: a 112px ring that scales 1 -> 2 while fading out (1s, loop).
+class _PingRing extends StatefulWidget {
+  const _PingRing();
+  @override
+  State<_PingRing> createState() => _PingRingState();
+}
+
+class _PingRingState extends State<_PingRing> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(seconds: 1))..repeat();
+  static const _curve = Cubic(0, 0, 0.2, 1);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _c,
+        builder: (context, _) {
+          final t = _curve.transform(_c.value);
+          return Opacity(
+            opacity: 1 - t,
+            child: Transform.scale(
+              scale: 1 + t,
+              child: Container(
+                width: 112,
+                height: 112,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.mutedForeground.withValues(alpha: 0.2)),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Tailwind `animate-pulse`: opacity 1 -> .5 -> 1 over 2s (loop).
+class _PulsingIcon extends StatefulWidget {
+  const _PulsingIcon(this.icon);
+  final IconData icon;
+  @override
+  State<_PulsingIcon> createState() => _PulsingIconState();
+}
+
+class _PulsingIconState extends State<_PulsingIcon> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
+  static const _curve = Cubic(0.4, 0, 0.6, 1);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) {
+        final v = _c.value;
+        final o = v < 0.5 ? 1 - 0.5 * _curve.transform(v / 0.5) : 0.5 + 0.5 * _curve.transform((v - 0.5) / 0.5);
+        return Opacity(opacity: o, child: Icon(widget.icon, size: 40, color: AppColors.foreground));
+      },
     );
   }
 }

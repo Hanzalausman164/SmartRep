@@ -36,7 +36,7 @@ class UnavailableScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text('Station LP-014 \u00b7 Floor 01', style: AppText.sans(size: 12, color: AppColors.mutedForeground)),
                 const SizedBox(height: 16),
-                const MachineArtwork(height: 180, faded: true),
+                const MachineArtwork(height: 224, faded: true),
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 18),

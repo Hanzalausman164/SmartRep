@@ -6,8 +6,10 @@ import '../app_root.dart';
 import '../theme/app_colors.dart';
 import '../widgets/logo.dart';
 
-/// Matches the prototype's minimal splash: a centered logo lockup with a
-/// soft radial glow, then advances to authentication after a brief pause.
+/// Matches the prototype's `SplashScreen`: the muted logo lockup with
+/// pulsing BLE arcs over a soft white radial glow. (The prototype waits for
+/// its "Next screen" button; the real app advances on its own after a couple
+/// of pulses, or immediately on tap.)
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key, required this.go});
   final GoTo go;
@@ -16,116 +18,66 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
-  late final AnimationController _pulseController;
-  late final AnimationController _entranceController;
-  Timer? _transitionTimer;
-
-  late final Animation<double> _glowScale;
-  late final Animation<double> _glowOpacity;
-
-  late final Animation<double> _entranceFade;
-  late final Animation<double> _entranceSlideY;
-  late final Animation<double> _entranceScale;
+class _SplashScreenState extends State<SplashScreen> {
+  Timer? _timer;
+  bool _visible = false;
 
   @override
   void initState() {
     super.initState();
-    _transitionTimer = Timer(const Duration(seconds: 2), _continue);
-    _pulseController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _glowScale = Tween<double>(begin: 1.0, end: 1.12).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-
-    _glowOpacity = Tween<double>(begin: 0.10, end: 0.25).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-
-    _entranceController = AnimationController(
-      duration: const Duration(milliseconds: 700),
-      vsync: this,
-    )..forward();
-
-    _entranceFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _entranceController, curve: Curves.easeOut),
-    );
-
-    _entranceScale = Tween<double>(begin: 0.9, end: 1.0).animate(
-      CurvedAnimation(parent: _entranceController, curve: Curves.easeOutCubic),
-    );
-
-    _entranceSlideY = Tween<double>(begin: 16.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
-      ),
-    );
+    // Fade in on the first frame, then hold long enough to see the arcs pulse.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _visible = true);
+    });
+    _timer = Timer(const Duration(milliseconds: 5000), _continue);
   }
 
   @override
   void dispose() {
-    _transitionTimer?.cancel();
-    _pulseController.dispose();
-    _entranceController.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 
   void _continue() {
-    _transitionTimer?.cancel();
+    _timer?.cancel();
     if (mounted) widget.go(AppScreen.auth);
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: _continue,
-      child: Container(
-        color: AppColors.background,
+      child: SizedBox.expand(
         child: Stack(
           alignment: Alignment.center,
           children: [
+            // `size-[520px] rounded-full radial-gradient(foreground 11% -> transparent 65%)`
             IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _pulseController,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _glowScale.value,
-                    child: Container(
-                      width: 520,
-                      height: 520,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            AppColors.brandBlue.withValues(alpha: _glowOpacity.value),
-                            Colors.transparent,
-                          ],
-                          stops: const [0, 0.65],
-                        ),
-                      ),
-                    ),
-                  );
-                },
+              child: Container(
+                width: 520,
+                height: 520,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.foreground.withValues(alpha: 0.11),
+                      AppColors.foreground.withValues(alpha: 0.0),
+                    ],
+                    stops: const [0.0, 0.92],
+                  ),
+                ),
               ),
             ),
-            AnimatedBuilder(
-              animation: _entranceController,
-              builder: (context, child) {
-                return Opacity(
-                  opacity: _entranceFade.value,
-                  child: Transform.translate(
-                    offset: Offset(0, _entranceSlideY.value - 25),
-                    child: Transform.scale(
-                      scale: _entranceScale.value,
-                      child: const Logo(size: LogoSize.large, muted: false),
-                    ),
-                  ),
-                );
-              },
+            // `-translate-y-[25px]`
+            Transform.translate(
+              offset: const Offset(0, -25),
+              child: AnimatedOpacity(
+                opacity: _visible ? 1 : 0,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOut,
+                child: const Logo(size: LogoSize.large, muted: true, animatedSignal: true),
+              ),
             ),
           ],
         ),

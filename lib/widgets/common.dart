@@ -86,8 +86,10 @@ class StatItem extends StatelessWidget {
   }
 }
 
-/// Matches `Field`: an icon-prefixed text input in a bordered card row.
-class AppField extends StatelessWidget {
+/// Matches the prototype's `Field`: an icon + text input in a card-coloured,
+/// 56px-tall rounded row. Owns its controller so typing survives rebuilds;
+/// if [initialValue] changes (e.g. show/hide password) the text follows.
+class AppField extends StatefulWidget {
   const AppField({
     super.key,
     required this.icon,
@@ -104,6 +106,27 @@ class AppField extends StatelessWidget {
   final Widget? suffix;
 
   @override
+  State<AppField> createState() => _AppFieldState();
+}
+
+class _AppFieldState extends State<AppField> {
+  late final TextEditingController _controller = TextEditingController(text: widget.initialValue);
+
+  @override
+  void didUpdateWidget(covariant AppField old) {
+    super.didUpdateWidget(old);
+    if (widget.initialValue != old.initialValue) {
+      _controller.text = widget.initialValue ?? '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       height: 56,
@@ -115,17 +138,17 @@ class AppField extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.mutedForeground),
+          Icon(widget.icon, size: 16, color: AppColors.mutedForeground),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
-              controller: TextEditingController(text: initialValue),
-              obscureText: obscure,
+              controller: _controller,
+              obscureText: widget.obscure,
               style: AppText.sans(size: 14),
-              decoration: InputDecoration(border: InputBorder.none, isDense: true, hintText: label),
+              decoration: InputDecoration(border: InputBorder.none, isDense: true, hintText: widget.label),
             ),
           ),
-          if (suffix != null) suffix!,
+          if (widget.suffix != null) widget.suffix!,
         ],
       ),
     );
@@ -223,30 +246,33 @@ class MetricTile extends StatelessWidget {
   }
 }
 
-/// Placeholder machine artwork. The original artwork is a credited Flaticon
-/// PNG that wasn't part of the files your friend shared, so this stands in
-/// for it. Swap for `Image.asset('assets/images/lat_pulldown.png')` (after
-/// adding the file and registering it under `flutter: assets:` in
-/// pubspec.yaml) once you have the real artwork.
+/// The lat pulldown machine illustration (same PNG the Lovable prototype
+/// imports as `lat-pulldown-clean.png`). Sized like the prototype's
+/// `LatPulldown` (`object-contain`, optionally faded to 45%).
 class MachineArtwork extends StatelessWidget {
-  const MachineArtwork({super.key, this.faded = false, this.height, this.width});
+  const MachineArtwork({
+    super.key,
+    this.faded = false,
+    this.height,
+    this.width,
+    this.alignment = Alignment.center,
+  });
   final bool faded;
   final double? height;
   final double? width;
+  final Alignment alignment;
 
   @override
   Widget build(BuildContext context) {
     return Opacity(
       opacity: faded ? 0.45 : 1,
-      child: Container(
+      child: Image.asset(
+        'assets/images/lat-pulldown-clean.png',
         height: height,
         width: width,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(Icons.fitness_center, size: (height ?? 120) * 0.35, color: AppColors.mutedForeground),
+        fit: BoxFit.contain,
+        alignment: alignment,
+        semanticLabel: 'Lat Pulldown machine',
       ),
     );
   }
