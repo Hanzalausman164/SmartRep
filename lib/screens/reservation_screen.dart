@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_root.dart';
+import '../models/machine.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
@@ -8,8 +9,9 @@ import '../widgets/common.dart';
 /// Matches `ReservationScreen`: machine info card, set/rep planning
 /// steppers, a planned-volume summary, and a reserve action.
 class ReservationScreen extends StatefulWidget {
-  const ReservationScreen({super.key, required this.go});
+  const ReservationScreen({super.key, required this.go, required this.machine});
   final GoTo go;
+  final Machine machine;
 
   @override
   State<ReservationScreen> createState() => _ReservationScreenState();
@@ -23,7 +25,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TopBar(title: 'Reserve machine', onBack: () => widget.go(AppScreen.connecting)),
+        TopBar(title: widget.machine.supportsAlternating ? 'Join machine' : 'Reserve machine', onBack: () => widget.go(AppScreen.connecting)),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
@@ -37,7 +39,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   ),
                   child: Row(
                     children: [
-                      const MachineArtwork(height: 112, width: 128),
+                      MachineArtwork(height: 112, width: 128, assetPath: widget.machine.asset, semanticLabel: '${widget.machine.name} machine'),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -47,13 +49,13 @@ class _ReservationScreenState extends State<ReservationScreen> {
                               children: [
                                 Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.qualityGood, shape: BoxShape.circle)),
                                 const SizedBox(width: 6),
-                                Text('AVAILABLE NOW', style: eyebrowStyle(size: 10, color: AppColors.qualityGood)),
+                                Text(widget.machine.supportsAlternating ? 'OPEN FOR ALTERNATE REPS' : 'AVAILABLE NOW', style: eyebrowStyle(size: 10, color: widget.machine.supportsAlternating ? const Color(0xFF7DD3FC) : AppColors.qualityGood)),
                               ],
                             ),
                             const SizedBox(height: 6),
-                            Text('Lat Pulldown', style: AppText.display(size: 22, weight: FontWeight.w700)),
+                            Text(widget.machine.name, style: AppText.display(size: 22, weight: FontWeight.w700)),
                             const SizedBox(height: 4),
-                            Text('Station LP-014 \u00b7 Floor 01', style: AppText.sans(size: 11, color: AppColors.mutedForeground)),
+                            Text('Station ${widget.machine.id} · ${widget.machine.floor}', style: AppText.sans(size: 11, color: AppColors.mutedForeground)),
                           ],
                         ),
                       ),
@@ -75,7 +77,9 @@ class _ReservationScreenState extends State<ReservationScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'This station is held for you until all $_sets sets are complete or you end the exercise.',
+                          widget.machine.supportsAlternating
+                              ? 'Alternate with the current member during their rest periods.'
+                              : 'This station is held for you until all $_sets sets are complete or you end the exercise.',
                           style: AppText.sans(size: 12, color: AppColors.mutedForeground),
                         ),
                       ),
@@ -100,9 +104,9 @@ class _ReservationScreenState extends State<ReservationScreen> {
                 const SizedBox(height: 14),
                 PrimaryButton(
                   onPressed: () => widget.go(AppScreen.calibration),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [Text('Reserve & continue'), SizedBox(width: 6), Icon(Icons.chevron_right, size: 16)],
+                    children: [Text(widget.machine.supportsAlternating ? 'Join & continue' : 'Reserve & continue'), SizedBox(width: 6), Icon(Icons.chevron_right, size: 16)],
                   ),
                 ),
               ],

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../app_root.dart';
+import '../models/machine.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
@@ -10,8 +11,9 @@ import '../widgets/common.dart';
 /// Matches `ConnectingScreen`: BLE pairing status, machine info card, and a
 /// "Start lifting" action that unlocks once the simulated pairing completes.
 class ConnectingScreen extends StatefulWidget {
-  const ConnectingScreen({super.key, required this.go});
+  const ConnectingScreen({super.key, required this.go, required this.machine});
   final GoTo go;
+  final Machine machine;
 
   @override
   State<ConnectingScreen> createState() => _ConnectingScreenState();
@@ -71,13 +73,13 @@ class _ConnectingScreenState extends State<ConnectingScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  _connected ? 'Sensor stream live' : 'Connecting to SR-LP-014',
+                  _connected ? 'Sensor stream live' : 'Connecting to ${widget.machine.id}',
                   style: eyebrowStyle(size: 11, color: _connected ? AppColors.qualityGood : AppColors.mutedForeground),
                 ),
                 const SizedBox(height: 6),
-                Text(_connected ? 'Lat Pulldown' : 'Hold steady', style: AppText.display(size: 26, weight: FontWeight.w700)),
+                Text(_connected ? widget.machine.name : 'Hold steady', style: AppText.display(size: 26, weight: FontWeight.w700)),
                 const SizedBox(height: 16),
-                const MachineArtwork(height: 224),
+                MachineArtwork(height: 224, assetPath: widget.machine.asset, semanticLabel: '${widget.machine.name} machine'),
                 const SizedBox(height: 16),
                 const Divider(color: AppColors.border, height: 1),
                 Padding(
@@ -94,7 +96,7 @@ class _ConnectingScreenState extends State<ConnectingScreen> {
                 const Divider(color: AppColors.border, height: 1),
                 const SizedBox(height: 16),
                 Text(
-                  'Cable resistance machine for controlled vertical pulling. Targets the lats, upper back, and biceps.',
+                  '${widget.machine.name} sensor is ready to pair. SmartRep will track your movement and rep quality in real time.',
                   style: AppText.sans(size: 13, color: AppColors.mutedForeground),
                 ),
                 const SizedBox(height: 24),

@@ -256,23 +256,27 @@ class MachineArtwork extends StatelessWidget {
     this.height,
     this.width,
     this.alignment = Alignment.center,
+    this.assetPath = 'assets/images/lat-pulldown-clean.png',
+    this.semanticLabel = 'Lat Pulldown machine',
   });
   final bool faded;
   final double? height;
   final double? width;
   final Alignment alignment;
+  final String assetPath;
+  final String semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     return Opacity(
       opacity: faded ? 0.45 : 1,
       child: Image.asset(
-        'assets/images/lat-pulldown-clean.png',
+        assetPath,
         height: height,
         width: width,
         fit: BoxFit.contain,
         alignment: alignment,
-        semanticLabel: 'Lat Pulldown machine',
+        semanticLabel: semanticLabel,
       ),
     );
   }
@@ -286,7 +290,7 @@ class BottomNav extends StatelessWidget {
 
   static const _items = [
     (id: 'progress', label: 'Progress', icon: Icons.trending_up),
-    (id: 'scan', label: 'Scan', icon: Icons.qr_code_scanner),
+    (id: 'scan', label: 'Machines', icon: Icons.fitness_center),
     (id: 'profile', label: 'Profile', icon: Icons.account_circle),
   ];
 

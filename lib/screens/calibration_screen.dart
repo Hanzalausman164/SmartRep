@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_root.dart';
+import '../models/machine.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
@@ -8,8 +9,9 @@ import '../widgets/common.dart';
 /// Matches `CalibrationScreen`: a 5-rep baseline capture with a progress
 /// bar, a live "current phase" readout, and a completion overlay.
 class CalibrationScreen extends StatefulWidget {
-  const CalibrationScreen({super.key, required this.go});
+  const CalibrationScreen({super.key, required this.go, required this.machine});
   final GoTo go;
+  final Machine machine;
 
   @override
   State<CalibrationScreen> createState() => _CalibrationScreenState();
@@ -87,7 +89,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                   ),
                   child: Stack(
                     children: [
-                      const Positioned(left: 20, top: 28, child: MachineArtwork(height: 224, width: 240, alignment: Alignment.centerLeft)),
+                      Positioned(left: 20, top: 28, child: MachineArtwork(height: 224, width: 240, alignment: Alignment.centerLeft, assetPath: widget.machine.asset, semanticLabel: '${widget.machine.name} machine')),
                       Positioned(right: 16, top: 32, child: _romTrack()),
                       if (!_complete)
                         Positioned(

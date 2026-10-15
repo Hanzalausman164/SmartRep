@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_root.dart';
+import '../models/machine.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
@@ -9,8 +10,9 @@ import '../widgets/gauges.dart';
 /// Matches `SummaryScreen`: headline stats, a ROM/tempo sparkline, a rep
 /// quality bar, and a short coach insight.
 class SummaryScreen extends StatelessWidget {
-  const SummaryScreen({super.key, required this.go});
+  const SummaryScreen({super.key, required this.go, required this.machine});
   final GoTo go;
+  final Machine machine;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,7 @@ class SummaryScreen extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text('Strong finish.', style: AppText.display(size: 36, weight: FontWeight.w700)),
                       const SizedBox(height: 6),
-                      Text('Lat Pulldown \u00b7 6 min 42 sec', style: AppText.sans(size: 12, color: AppColors.mutedForeground)),
+                      Text('${machine.name} · 6 min 42 sec', style: AppText.sans(size: 12, color: AppColors.mutedForeground)),
                     ],
                   ),
                 ),

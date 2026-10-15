@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_root.dart';
+import '../models/machine.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
@@ -8,8 +9,9 @@ import '../widgets/common.dart';
 /// Matches `UnavailableScreen`: shown when a scanned machine is already
 /// reserved, with the current occupant's set progress and an ETA.
 class UnavailableScreen extends StatelessWidget {
-  const UnavailableScreen({super.key, required this.go});
+  const UnavailableScreen({super.key, required this.go, required this.machine});
   final GoTo go;
+  final Machine machine;
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +32,13 @@ class UnavailableScreen extends StatelessWidget {
                   child: const Icon(Icons.lock, size: 36, color: AppColors.qualityWarn),
                 ),
                 const SizedBox(height: 18),
-                Text('CURRENTLY RESERVED', style: eyebrowStyle(color: AppColors.qualityWarn)),
+                Text('CURRENTLY OCCUPIED', style: eyebrowStyle(color: AppColors.qualityWarn)),
                 const SizedBox(height: 6),
-                Text('Lat Pulldown', style: AppText.display(size: 30, weight: FontWeight.w700)),
+                Text(machine.name, style: AppText.display(size: 30, weight: FontWeight.w700)),
                 const SizedBox(height: 4),
-                Text('Station LP-014 \u00b7 Floor 01', style: AppText.sans(size: 12, color: AppColors.mutedForeground)),
+                Text('Station ${machine.id} · ${machine.floor}', style: AppText.sans(size: 12, color: AppColors.mutedForeground)),
                 const SizedBox(height: 16),
-                const MachineArtwork(height: 224, faded: true),
+                MachineArtwork(height: 224, faded: true, assetPath: machine.asset, semanticLabel: '${machine.name} machine'),
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 18),
@@ -113,7 +115,7 @@ class UnavailableScreen extends StatelessWidget {
                   onPressed: () => go(AppScreen.scan),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [Icon(Icons.qr_code_scanner, size: 16), SizedBox(width: 8), Text('Scan another machine')],
+                    children: [Icon(Icons.bluetooth, size: 16), SizedBox(width: 8), Text('Choose another machine')],
                   ),
                 ),
               ],

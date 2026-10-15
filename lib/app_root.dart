@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'models/machine.dart';
 import 'screens/auth_screen.dart';
 import 'screens/calibration_screen.dart';
 import 'screens/connecting_screen.dart';
@@ -45,23 +46,31 @@ class AppRoot extends StatefulWidget {
 
 class _AppRootState extends State<AppRoot> {
   AppScreen _screen = AppScreen.splash;
+  Machine _selectedMachine = nearbyMachines.first;
 
   void _go(AppScreen target) => setState(() => _screen = target);
+
+  void _selectMachine(Machine machine) {
+    setState(() {
+      _selectedMachine = machine;
+      _screen = machine.isOccupied ? AppScreen.unavailable : AppScreen.connecting;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final Widget body = switch (_screen) {
       AppScreen.splash => SplashScreen(go: _go),
       AppScreen.auth => AuthScreen(go: _go),
-      AppScreen.scan => ScanScreen(go: _go),
-      AppScreen.connecting => ConnectingScreen(go: _go),
-      AppScreen.reservation => ReservationScreen(go: _go),
-      AppScreen.calibration => CalibrationScreen(go: _go),
-      AppScreen.tracking => TrackingScreen(go: _go),
+      AppScreen.scan => ScanScreen(onSelect: _selectMachine),
+      AppScreen.connecting => ConnectingScreen(go: _go, machine: _selectedMachine),
+      AppScreen.reservation => ReservationScreen(go: _go, machine: _selectedMachine),
+      AppScreen.calibration => CalibrationScreen(go: _go, machine: _selectedMachine),
+      AppScreen.tracking => TrackingScreen(go: _go, machine: _selectedMachine),
       AppScreen.rest => RestScreen(go: _go),
-      AppScreen.summary => SummaryScreen(go: _go),
+      AppScreen.summary => SummaryScreen(go: _go, machine: _selectedMachine),
       AppScreen.profile => ProfileScreen(go: _go),
-      AppScreen.unavailable => UnavailableScreen(go: _go),
+      AppScreen.unavailable => UnavailableScreen(go: _go, machine: _selectedMachine),
     };
 
     return Material(
